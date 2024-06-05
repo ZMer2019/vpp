@@ -108,6 +108,38 @@ vpe_main_init(vlib_main_t *vm) {
  */
 char *vlib_default_runtime_dir = "vpp";
 
+static void check_sets(void) {
+#if __x86_64__
+    CLIB_UNUSED(const char *msg) = "ERROR: This binary requires CPU with %s extensions.\n";
+#define _(a,b)                                  \
+    if (!clib_cpu_supports_ ## a ())            \
+    {                                           \
+        fprintf(stderr, msg, b);                \
+        exit(1);                                \
+    }
+
+#if __AVX2__
+_(avx2, "AVX2")
+#endif
+#if __AVX__
+_(avx, "AVX")
+#endif
+#if __SSE4_2__
+_(sse42, "SSE4.2")
+#endif
+#if __SSE4_1__
+_(sse41, "SSE4.1")
+#endif
+#if __SSSE3__
+_(ssse3, "SSSE3")
+#endif
+#if __SSE3__
+_(sse3, "SSE3")
+#endif
+#undef _
+#endif
+}
+
 int
 main(int argc, char *argv[]) {
     int i;
@@ -123,36 +155,8 @@ main(int argc, char *argv[]) {
     cpu_set_t cpuset;
     void *main_heap;
 
-#if __x86_64__
-    CLIB_UNUSED(const char *msg)
-    = "ERROR: This binary requires CPU with %s extensions.\n";
-#define _(a,b)                                  \
-    if (!clib_cpu_supports_ ## a ())            \
-      {                                         \
-	fprintf(stderr, msg, b);                \
-	exit(1);                                \
-      }
+    check_sets();
 
-#if __AVX2__
-  _(avx2, "AVX2")
-#endif
-#if __AVX__
-    _(avx, "AVX")
-#endif
-#if __SSE4_2__
-    _(sse42, "SSE4.2")
-#endif
-#if __SSE4_1__
-    _(sse41, "SSE4.1")
-#endif
-#if __SSSE3__
-    _(ssse3, "SSSE3")
-#endif
-#if __SSE3__
-    _(sse3, "SSE3")
-#endif
-#undef _
-#endif
     /*
      * Load startup config from file.
      * usage: vpp -c /etc/vpp/startup.conf
