@@ -52,15 +52,14 @@
    If you change u32 len -> u64 len, single vectors can
    exceed 2**32 elements. Clib heaps are vectors. */
 
-typedef struct
-{
-  u32 len; /**< Number of elements in vector (NOT its allocated length). */
-  u8 hdr_size;	      /**< header size divided by VEC_MIN_ALIGN */
-  u8 log2_align : 7;  /**< data alignment */
-  u8 default_heap : 1; /**< vector uses default heap */
-  u8 grow_elts;	       /**< number of elts vector can grow without realloc */
-  u8 vpad[1];	       /**< pad to 8 bytes */
-  u8 vector_data[0];  /**< Vector data . */
+typedef struct {
+    u32 len; /**< Number of elements in vector (NOT its allocated length). */
+    u8 hdr_size; /**< header size divided by VEC_MIN_ALIGN */
+    u8 log2_align: 7; /**< data alignment */
+    u8 default_heap: 1; /**< vector uses default heap */
+    u8 grow_elts; /**< number of elts vector can grow without realloc */
+    u8 vpad[1]; /**< pad to 8 bytes */
+    u8 vector_data[0]; /**< Vector data . */
 } vec_header_t;
 
 #define VEC_MIN_ALIGN 8
@@ -76,8 +75,9 @@ typedef struct
 #define _vec_find(v)	((vec_header_t *) (v) - 1)
 #define _vec_heap(v)	(((void **) (_vec_find (v)))[-1])
 
-always_inline uword __vec_align (uword data_align, uword configuered_align);
-always_inline uword __vec_elt_sz (uword elt_sz, int is_void);
+always_inline uword __vec_align(uword data_align, uword configuered_align);
+
+always_inline uword __vec_elt_sz(uword elt_sz, int is_void);
 
 #define _vec_round_size(s) \
   (((s) + sizeof (uword) - 1) &~ (sizeof (uword) - 1))
@@ -87,10 +87,9 @@ always_inline uword __vec_elt_sz (uword elt_sz, int is_void);
 #define _vec_align(V, A) __vec_align (__alignof__((V)[0]), A)
 
 always_inline __clib_nosanitize_addr uword
-vec_get_header_size (void *v)
-{
-  uword header_size = _vec_find (v)->hdr_size * VEC_MIN_ALIGN;
-  return header_size;
+vec_get_header_size(void *v) {
+    uword header_size = _vec_find(v)->hdr_size * VEC_MIN_ALIGN;
+    return header_size;
 }
 
 /** \brief Find a user vector header
@@ -100,9 +99,8 @@ vec_get_header_size (void *v)
 */
 
 always_inline void *
-vec_header (void *v)
-{
-  return v ? v - vec_get_header_size (v) : 0;
+vec_header(void *v) {
+    return v ? v - vec_get_header_size(v) : 0;
 }
 
 /** \brief Find the end of user vector header
@@ -112,9 +110,8 @@ vec_header (void *v)
 */
 
 always_inline void *
-vec_header_end (void *v)
-{
-  return v + vec_get_header_size (v);
+vec_header_end(void *v) {
+    return v + vec_get_header_size(v);
 }
 
 /** \brief Number of elements in vector (rvalue-only, NULL tolerant)
@@ -124,15 +121,14 @@ vec_header_end (void *v)
 */
 
 static_always_inline u32
-__vec_len (void *v)
-{
-  return _vec_find (v)->len;
+__vec_len(void *v) {
+    return _vec_find(v)->len;
 }
 
 #define _vec_len(v)	__vec_len ((void *) (v))
 #define vec_len(v)	((v) ? _vec_len(v) : 0)
 
-u32 vec_len_not_inline (void *v);
+u32 vec_len_not_inline(void *v);
 
 /** \brief Number of data bytes in vector. */
 
@@ -145,7 +141,7 @@ u32 vec_len_not_inline (void *v);
  * @return memory size allocated for the vector
  */
 
-uword vec_mem_size (void *v);
+uword vec_mem_size(void *v);
 
 /**
  * Number of elements that can fit into generic vector
@@ -156,45 +152,41 @@ uword vec_mem_size (void *v);
  */
 
 always_inline uword
-vec_max_bytes (void *v)
-{
-  return v ? vec_mem_size (v) - vec_get_header_size (v) : 0;
+vec_max_bytes(void *v) {
+    return v ? vec_mem_size(v) - vec_get_header_size(v) : 0;
 }
 
 always_inline uword
-_vec_max_len (void *v, uword elt_sz)
-{
-  return vec_max_bytes (v) / elt_sz;
+_vec_max_len(void *v, uword elt_sz) {
+    return vec_max_bytes(v) / elt_sz;
 }
 
 #define vec_max_len(v) _vec_max_len (v, _vec_elt_sz (v))
 
 static_always_inline void
-_vec_set_grow_elts (void *v, uword n_elts)
-{
-  uword max = pow2_mask (BITS (_vec_find (0)->grow_elts));
+_vec_set_grow_elts(void *v, uword n_elts) {
+    uword max = pow2_mask(BITS(_vec_find (0)->grow_elts));
 
-  if (PREDICT_FALSE (n_elts > max))
-    n_elts = max;
+    if (PREDICT_FALSE(n_elts > max))
+        n_elts = max;
 
-  _vec_find (v)->grow_elts = n_elts;
+    _vec_find(v)->grow_elts = n_elts;
 }
 
 always_inline void
-_vec_set_len (void *v, uword len, uword elt_sz)
-{
-  ASSERT (v);
-  ASSERT (len <= _vec_max_len (v, elt_sz));
-  uword old_len = _vec_len (v);
-  uword grow_elts = _vec_find (v)->grow_elts;
+_vec_set_len(void *v, uword len, uword elt_sz) {
+    ASSERT(v);
+    ASSERT(len <= _vec_max_len (v, elt_sz));
+    uword old_len = _vec_len(v);
+    uword grow_elts = _vec_find(v)->grow_elts;
 
-  if (len > old_len)
-    clib_mem_unpoison (v + old_len * elt_sz, (len - old_len) * elt_sz);
-  else if (len < old_len)
-    clib_mem_poison (v + len * elt_sz, (old_len - len) * elt_sz);
+    if (len > old_len)
+        clib_mem_unpoison(v + old_len * elt_sz, (len - old_len) * elt_sz);
+    else if (len < old_len)
+        clib_mem_poison(v + len * elt_sz, (old_len - len) * elt_sz);
 
-  _vec_set_grow_elts (v, old_len + grow_elts - len);
-  _vec_find (v)->len = len;
+    _vec_set_grow_elts(v, old_len + grow_elts - len);
+    _vec_find(v)->len = len;
 }
 
 #define vec_set_len(v, l) _vec_set_len ((void *) v, l, _vec_elt_sz (v))

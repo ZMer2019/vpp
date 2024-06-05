@@ -109,40 +109,69 @@
   } t##s##x##c##_union_t;
 
 /* clang-format off */
-  foreach_vec64i foreach_vec64u foreach_vec64f
-  foreach_vec128i foreach_vec128u foreach_vec128f
-  foreach_vec256i foreach_vec256u foreach_vec256f
-  foreach_vec512i foreach_vec512u foreach_vec512f
+foreach_vec64i
+
+foreach_vec64u
+
+foreach_vec64f
+
+foreach_vec128i
+
+foreach_vec128u
+
+foreach_vec128f
+
+foreach_vec256i
+
+foreach_vec256u
+
+foreach_vec256f
+
+foreach_vec512i
+
+foreach_vec512u
+
+foreach_vec512f
+
 /* clang-format on */
 #undef _
 
-  typedef union
-{
+typedef union {
 #define _(t, s, c) t##s##x##c as_##t##s##x##c;
-  foreach_vec128i foreach_vec128u foreach_vec128f
+    foreach_vec128i
+    foreach_vec128u
+    foreach_vec128f
 #undef _
 } vec128_t;
 
-typedef union
-{
+typedef union {
 #define _(t, s, c) t##s##x##c as_##t##s##x##c;
-  foreach_vec256i foreach_vec256u foreach_vec256f
+    foreach_vec256i
+    foreach_vec256u
+    foreach_vec256f
 #undef _
 #define _(t, s, c) t##s##x##c as_##t##s##x##c[2];
-    foreach_vec128i foreach_vec128u foreach_vec128f
+    foreach_vec128i
+    foreach_vec128u
+    foreach_vec128f
 #undef _
 } vec256_t;
 
-typedef union
-{
+typedef union {
 #define _(t, s, c) t##s##x##c as_##t##s##x##c;
-  foreach_vec512i foreach_vec512u foreach_vec512f
+    foreach_vec512i
+    foreach_vec512u
+    foreach_vec512f
 #undef _
 #define _(t, s, c) t##s##x##c as_##t##s##x##c[2];
-    foreach_vec256i foreach_vec256u foreach_vec256f
+    foreach_vec256i
+    foreach_vec256u
+    foreach_vec256f
 #undef _
 #define _(t, s, c) t##s##x##c as_##t##s##x##c[4];
-      foreach_vec128i foreach_vec128u foreach_vec128f
+    foreach_vec128i
+    foreach_vec128u
+    foreach_vec128f
 #undef _
 } vec512_t;
 
@@ -150,14 +179,13 @@ typedef union
 #define _(t, s, c) \
 static_always_inline t##s##x##c                                         \
 t##s##x##c##_zero ()                                                    \
-{ return (t##s##x##c) {}; }                                             \
-
+{ return (t##s##x##c) {}; }
 foreach_vec
 #undef _
 
 #undef _vector_size
 
-  /* _shuffle and _shuffle2 */
+/* _shuffle and _shuffle2 */
 #if defined(__GNUC__) && !defined(__clang__)
 #define __builtin_shufflevector(v1, v2, ...)                                  \
   __builtin_shuffle ((v1), (v2), (__typeof__ (v1)){ __VA_ARGS__ })

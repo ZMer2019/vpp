@@ -58,205 +58,204 @@
 #define VLIB_ELOG_MAIN_LOOP 0
 #endif
 
-typedef struct
-{
-  u8 trace_filter_enable;
-  u32 classify_table_index;
+typedef struct {
+    u8 trace_filter_enable;
+    u32 classify_table_index;
 } vlib_trace_filter_t;
 
-typedef enum
-{
-  VLIB_NODE_RUNTIME_PERF_BEFORE,
-  VLIB_NODE_RUNTIME_PERF_AFTER,
-  VLIB_NODE_RUNTIME_PERF_RESET,
+typedef enum {
+    VLIB_NODE_RUNTIME_PERF_BEFORE,
+    VLIB_NODE_RUNTIME_PERF_AFTER,
+    VLIB_NODE_RUNTIME_PERF_RESET,
 } vlib_node_runtime_perf_call_type_t;
 
-typedef struct
-{
-  struct vlib_main_t *vm;
-  vlib_node_runtime_t *node;
-  vlib_frame_t *frame;
-  uword packets;
-  u64 cpu_time_now;
-  vlib_node_runtime_perf_call_type_t call_type;
+typedef struct {
+    struct vlib_main_t *vm;
+    vlib_node_runtime_t *node;
+    vlib_frame_t *frame;
+    uword packets;
+    u64 cpu_time_now;
+    vlib_node_runtime_perf_call_type_t call_type;
 } vlib_node_runtime_perf_callback_args_t;
 
 struct vlib_node_runtime_perf_callback_data_t;
 
 typedef void (*vlib_node_runtime_perf_callback_fp_t)
-  (struct vlib_node_runtime_perf_callback_data_t * data,
-   vlib_node_runtime_perf_callback_args_t * args);
+(struct vlib_node_runtime_perf_callback_data_t *data,
+ vlib_node_runtime_perf_callback_args_t *args);
 
-typedef struct vlib_node_runtime_perf_callback_data_t
-{
-  vlib_node_runtime_perf_callback_fp_t fp;
-  union
-  {
-    void *v;
-    u64 u;
-  } u[3];
+typedef struct vlib_node_runtime_perf_callback_data_t {
+    vlib_node_runtime_perf_callback_fp_t fp;
+
+    union {
+        void *v;
+        u64 u;
+    } u[3];
 } vlib_node_runtime_perf_callback_data_t;
 
-clib_callback_data_typedef (vlib_node_runtime_perf_callback_set_t,
-			    vlib_node_runtime_perf_callback_data_t);
+clib_callback_data_typedef(vlib_node_runtime_perf_callback_set_t,
+                           vlib_node_runtime_perf_callback_data_t);
 
-typedef struct vlib_main_t
-{
-  CLIB_CACHE_LINE_ALIGN_MARK (cacheline0);
-  /* Instruction level timing state. */
-  clib_time_t clib_time;
-  /* Offset from main thread time */
-  f64 time_offset;
-  f64 time_last_barrier_release;
+typedef struct vlib_main_t {
+    CLIB_CACHE_LINE_ALIGN_MARK(cacheline0);
+    /* Instruction level timing state. */
+    clib_time_t clib_time;
+    /* Offset from main thread time */
+    f64 time_offset;
+    f64 time_last_barrier_release;
 
-  /* Time stamp of last node dispatch. */
-  u64 cpu_time_last_node_dispatch;
+    /* Time stamp of last node dispatch. */
+    u64 cpu_time_last_node_dispatch;
 
-  /* Time stamp when main loop was entered (time 0). */
-  u64 cpu_time_main_loop_start;
+    /* Time stamp when main loop was entered (time 0). */
+    u64 cpu_time_main_loop_start;
 
-  /* Incremented once for each main loop. */
-  volatile u32 main_loop_count;
+    /* Incremented once for each main loop. */
+    volatile u32 main_loop_count;
 
-  /* Count of vectors processed this main loop. */
-  u32 main_loop_vectors_processed;
-  u32 main_loop_nodes_processed;
+    /* Count of vectors processed this main loop. */
+    u32 main_loop_vectors_processed;
+    u32 main_loop_nodes_processed;
 
-  /* Internal node vectors, calls */
-  u64 internal_node_vectors;
-  u64 internal_node_calls;
-  u64 internal_node_vectors_last_clear;
-  u64 internal_node_calls_last_clear;
+    /* Internal node vectors, calls */
+    u64 internal_node_vectors;
+    u64 internal_node_calls;
+    u64 internal_node_vectors_last_clear;
+    u64 internal_node_calls_last_clear;
 
-  /* Instantaneous vector rate */
-  u32 internal_node_last_vectors_per_main_loop;
+    /* Instantaneous vector rate */
+    u32 internal_node_last_vectors_per_main_loop;
 
-  /* Main loop hw / sw performance counters */
-  vlib_node_runtime_perf_callback_set_t vlib_node_runtime_perf_callbacks;
+    /* Main loop hw / sw performance counters */
+    vlib_node_runtime_perf_callback_set_t vlib_node_runtime_perf_callbacks;
 
-  /* dispatch wrapper function */
-  vlib_node_function_t *dispatch_wrapper_fn;
+    /* dispatch wrapper function */
+    vlib_node_function_t *dispatch_wrapper_fn;
 
-  /* Every so often we switch to the next counter. */
+    /* Every so often we switch to the next counter. */
 #define VLIB_LOG2_MAIN_LOOPS_PER_STATS_UPDATE 7
 
-  /* Jump target to exit main loop with given code. */
-  u32 main_loop_exit_set;
-  /* Set e.g. in the SIGTERM signal handler, checked in a safe place... */
-  volatile u32 main_loop_exit_now;
-  /* Exit status that will be returned by the process upon exit. */
-  volatile int main_loop_exit_status;
-  clib_longjmp_t main_loop_exit;
+    /* Jump target to exit main loop with given code. */
+    u32 main_loop_exit_set;
+    /* Set e.g. in the SIGTERM signal handler, checked in a safe place... */
+    volatile u32 main_loop_exit_now;
+    /* Exit status that will be returned by the process upon exit. */
+    volatile int main_loop_exit_status;
+    clib_longjmp_t main_loop_exit;
 #define VLIB_MAIN_LOOP_EXIT_NONE 0
 #define VLIB_MAIN_LOOP_EXIT_PANIC 1
-  /* Exit via CLI. */
+    /* Exit via CLI. */
 #define VLIB_MAIN_LOOP_EXIT_CLI 2
 
-  /* Error marker to use when exiting main loop. */
-  clib_error_t *main_loop_error;
+    /* Error marker to use when exiting main loop. */
+    clib_error_t *main_loop_error;
 
-  /* buffer main structure. */
-  vlib_buffer_main_t *buffer_main;
+    /* buffer main structure. */
+    vlib_buffer_main_t *buffer_main;
 
-  /* physical memory main structure. */
-  vlib_physmem_main_t physmem_main;
+    /* physical memory main structure. */
+    vlib_physmem_main_t physmem_main;
 
-  /* Node graph main structure. */
-  vlib_node_main_t node_main;
+    /* Node graph main structure. */
+    vlib_node_main_t node_main;
 
-  /* Packet trace buffer. */
-  vlib_trace_main_t trace_main;
+    /* Packet trace buffer. */
+    vlib_trace_main_t trace_main;
 
-  /* Error handling. */
-  vlib_error_main_t error_main;
+    /* Error handling. */
+    vlib_error_main_t error_main;
 
-  /* Punt packets to underlying operating system for when fast switching
-     code does not know what to do. */
-  void (*os_punt_frame) (struct vlib_main_t * vm,
-			 struct vlib_node_runtime_t * node,
-			 vlib_frame_t * frame);
+    /* Punt packets to underlying operating system for when fast switching
+       code does not know what to do. */
+    void (*os_punt_frame)(struct vlib_main_t *vm,
+                          struct vlib_node_runtime_t *node,
+                          vlib_frame_t *frame);
 
-  /* Stream index to use for distribution when MC is enabled. */
-  u32 mc_stream_index;
+    /* Stream index to use for distribution when MC is enabled. */
+    u32 mc_stream_index;
 
-  /* Hash table to record which init functions have been called. */
-  uword *worker_init_functions_called;
+    /* Hash table to record which init functions have been called. */
+    uword *worker_init_functions_called;
 
-  vlib_one_time_waiting_process_t *procs_waiting_for_mc_stream_join;
+    vlib_one_time_waiting_process_t *procs_waiting_for_mc_stream_join;
 
-  /* Event logger trace flags */
-  int elog_trace_api_messages;
-  int elog_trace_cli_commands;
-  int elog_trace_graph_dispatch;
-  int elog_trace_graph_circuit;
-  u32 elog_trace_graph_circuit_node_index;
+    /* Event logger trace flags */
+    int elog_trace_api_messages;
+    int elog_trace_cli_commands;
+    int elog_trace_graph_dispatch;
+    int elog_trace_graph_circuit;
+    u32 elog_trace_graph_circuit_node_index;
 
-  /* Node call and return event types. */
-  elog_event_type_t *node_call_elog_event_types;
-  elog_event_type_t *node_return_elog_event_types;
+    /* Node call and return event types. */
+    elog_event_type_t *node_call_elog_event_types;
+    elog_event_type_t *node_return_elog_event_types;
 
-  elog_event_type_t *error_elog_event_types;
+    elog_event_type_t *error_elog_event_types;
 
-  /* Seed for random number generator. */
-  uword random_seed;
+    /* Seed for random number generator. */
+    uword random_seed;
 
-  /* Buffer of random data for various uses. */
-  clib_random_buffer_t random_buffer;
+    /* Buffer of random data for various uses. */
+    clib_random_buffer_t random_buffer;
 
-  /* thread, cpu and numa_node indices */
-  u32 thread_index;
-  u32 cpu_id;
-  u32 numa_node;
+    /* thread, cpu and numa_node indices */
+    u32 thread_index;
+    u32 cpu_id;
+    u32 numa_node;
 
-  /* control-plane API queue signal pending, length indication */
-  volatile u32 queue_signal_pending;
-  volatile u32 api_queue_nonempty;
-  void (*queue_signal_callback) (struct vlib_main_t *);
+    /* control-plane API queue signal pending, length indication */
+    volatile u32 queue_signal_pending;
+    volatile u32 api_queue_nonempty;
 
-  /* Top of (worker) dispatch loop callback */
-  void (**volatile worker_thread_main_loop_callbacks)
+    void (*queue_signal_callback)(struct vlib_main_t *);
+
+    /* Top of (worker) dispatch loop callback */
+    void (**volatile worker_thread_main_loop_callbacks)
     (struct vlib_main_t *, u64 t);
-  void (**volatile worker_thread_main_loop_callback_tmp)
+
+    void (**volatile worker_thread_main_loop_callback_tmp)
     (struct vlib_main_t *, u64 t);
-  clib_spinlock_t worker_thread_main_loop_callback_lock;
 
-  /* debugging */
-  volatile int parked_at_barrier;
+    clib_spinlock_t worker_thread_main_loop_callback_lock;
 
-  /* Dispatch loop time accounting */
-  u64 loops_this_reporting_interval;
-  f64 loop_interval_end;
-  f64 loop_interval_start;
-  f64 loops_per_second;
-  f64 seconds_per_loop;
-  f64 damping_constant;
+    /* debugging */
+    volatile int parked_at_barrier;
 
-  /*
-   * Barrier epoch - Set to current time, each time barrier_sync or
-   * barrier_release is called with zero recursion.
-   */
-  f64 barrier_epoch;
+    /* Dispatch loop time accounting */
+    u64 loops_this_reporting_interval;
+    f64 loop_interval_end;
+    f64 loop_interval_start;
+    f64 loops_per_second;
+    f64 seconds_per_loop;
+    f64 damping_constant;
 
-  /* Earliest barrier can be closed again */
-  f64 barrier_no_close_before;
+    /*
+     * Barrier epoch - Set to current time, each time barrier_sync or
+     * barrier_release is called with zero recursion.
+     */
+    f64 barrier_epoch;
 
-  /* Barrier counter callback */
-  void (**volatile barrier_perf_callbacks)
+    /* Earliest barrier can be closed again */
+    f64 barrier_no_close_before;
+
+    /* Barrier counter callback */
+    void (**volatile barrier_perf_callbacks)
     (struct vlib_main_t *, u64 t, int leave);
-  void (**volatile barrier_perf_callbacks_tmp)
+
+    void (**volatile barrier_perf_callbacks_tmp)
     (struct vlib_main_t *, u64 t, int leave);
 
-  /* Need to check the frame queues */
-  volatile uword check_frame_queues;
+    /* Need to check the frame queues */
+    volatile uword check_frame_queues;
 
-  /* RPC requests, main thread only */
-  uword *pending_rpc_requests;
-  uword *processing_rpc_requests;
-  clib_spinlock_t pending_rpc_lock;
+    /* RPC requests, main thread only */
+    uword *pending_rpc_requests;
+    uword *processing_rpc_requests;
+    clib_spinlock_t pending_rpc_lock;
 
-  /* buffer fault injector */
-  u32 buffer_alloc_success_seed;
-  f64 buffer_alloc_success_rate;
+    /* buffer fault injector */
+    u32 buffer_alloc_success_seed;
+    f64 buffer_alloc_success_rate;
 
 #ifdef CLIB_SANITIZE_ADDR
   /* address sanitizer stack save */
@@ -264,90 +263,85 @@ typedef struct vlib_main_t
 #endif
 } vlib_main_t;
 
-typedef struct vlib_global_main_t
-{
-  CLIB_CACHE_LINE_ALIGN_MARK (cacheline0);
+typedef struct vlib_global_main_t {
+    CLIB_CACHE_LINE_ALIGN_MARK(cacheline0);
 
-  /* Per-thread Mains */
-  vlib_main_t **vlib_mains;
+    /* Per-thread Mains */
+    vlib_main_t **vlib_mains;
 
-  /* Name for e.g. syslog. */
-  char *name;
+    /* Name for e.g. syslog. */
+    char *name;
 
-  /* full path to main executable */
-  char *exec_path;
+    /* full path to main executable */
+    char *exec_path;
 
-  /* command line arguments */
-  u8 **argv;
+    /* command line arguments */
+    u8 **argv;
 
-  /* post-mortem callbacks */
-  void (**post_mortem_callbacks) (void);
+    /* post-mortem callbacks */
+    void (**post_mortem_callbacks)(void);
 
-  /*
-   * Need to call vlib_worker_thread_node_runtime_update before
-   * releasing worker thread barrier.
-   */
-  int need_vlib_worker_thread_node_runtime_update;
+    /*
+     * Need to call vlib_worker_thread_node_runtime_update before
+     * releasing worker thread barrier.
+     */
+    int need_vlib_worker_thread_node_runtime_update;
 
-  /* Command line interface. */
-  vlib_cli_main_t cli_main;
+    /* Command line interface. */
+    vlib_cli_main_t cli_main;
 
-  /* Node registrations added by constructors */
-  vlib_node_registration_t *node_registrations;
+    /* Node registrations added by constructors */
+    vlib_node_registration_t *node_registrations;
 
-  /* Event logger. */
-  elog_main_t elog_main;
-  u32 configured_elog_ring_size;
+    /* Event logger. */
+    elog_main_t elog_main;
+    u32 configured_elog_ring_size;
 
-  /* Packet trace capture filter */
-  vlib_trace_filter_t trace_filter;
+    /* Packet trace capture filter */
+    vlib_trace_filter_t trace_filter;
 
-  /* List of init functions to call, setup by constructors */
-  _vlib_init_function_list_elt_t *init_function_registrations;
-  _vlib_init_function_list_elt_t *main_loop_enter_function_registrations;
-  _vlib_init_function_list_elt_t *main_loop_exit_function_registrations;
-  _vlib_init_function_list_elt_t *worker_init_function_registrations;
-  _vlib_init_function_list_elt_t *num_workers_change_function_registrations;
-  _vlib_init_function_list_elt_t *api_init_function_registrations;
-  vlib_config_function_runtime_t *config_function_registrations;
+    /* List of init functions to call, setup by constructors */
+    _vlib_init_function_list_elt_t *init_function_registrations;
+    _vlib_init_function_list_elt_t *main_loop_enter_function_registrations;
+    _vlib_init_function_list_elt_t *main_loop_exit_function_registrations;
+    _vlib_init_function_list_elt_t *worker_init_function_registrations;
+    _vlib_init_function_list_elt_t *num_workers_change_function_registrations;
+    _vlib_init_function_list_elt_t *api_init_function_registrations;
+    vlib_config_function_runtime_t *config_function_registrations;
 
-  /* Hash table to record which init functions have been called. */
-  uword *init_functions_called;
-
+    /* Hash table to record which init functions have been called. */
+    uword *init_functions_called;
 } vlib_global_main_t;
 
 /* Global main structure. */
 extern vlib_global_main_t vlib_global_main;
 
-void vlib_worker_loop (vlib_main_t * vm);
+void vlib_worker_loop(vlib_main_t *vm);
 
 always_inline f64
-vlib_time_now (vlib_main_t * vm)
-{
+vlib_time_now(vlib_main_t *vm) {
 #if CLIB_DEBUG > 0
-  extern __thread uword __os_thread_index;
+    extern __thread uword __os_thread_index;
 #endif
-  /*
-   * Make sure folks don't pass &vlib_global_main from a worker thread.
-   */
-  ASSERT (vm->thread_index == __os_thread_index);
-  return clib_time_now (&vm->clib_time) + vm->time_offset;
+    /*
+     * Make sure folks don't pass &vlib_global_main from a worker thread.
+     */
+    ASSERT(vm->thread_index == __os_thread_index);
+    return clib_time_now(&vm->clib_time) + vm->time_offset;
 }
 
 always_inline f64
-vlib_time_now_ticks (vlib_main_t * vm, u64 n)
-{
-  return clib_time_now_internal (&vm->clib_time, n);
+vlib_time_now_ticks(vlib_main_t *vm, u64 n) {
+    return clib_time_now_internal(&vm->clib_time, n);
 }
 
 /* Busy wait for specified time. */
 always_inline void
-vlib_time_wait (vlib_main_t * vm, f64 wait)
-{
-  f64 t = vlib_time_now (vm);
-  f64 limit = t + wait;
-  while (t < limit)
-    t = vlib_time_now (vm);
+vlib_time_wait(vlib_main_t *vm, f64 wait) {
+    f64 t = vlib_time_now(vm);
+    f64 limit = t + wait;
+    while (t < limit)
+        t = vlib_time_now(vm);
 }
 
 /* Time a piece of code. */
@@ -374,15 +368,13 @@ do {						\
 })
 
 always_inline void
-vlib_panic_with_error (vlib_main_t * vm, clib_error_t * error)
-{
-  vm->main_loop_error = error;
-  if (vm->main_loop_exit_set)
-    clib_longjmp (&vm->main_loop_exit, VLIB_MAIN_LOOP_EXIT_PANIC);
-  else
-    {
-      clib_warning ("panic: %U", format_clib_error, error);
-      abort ();
+vlib_panic_with_error(vlib_main_t *vm, clib_error_t *error) {
+    vm->main_loop_error = error;
+    if (vm->main_loop_exit_set)
+        clib_longjmp(&vm->main_loop_exit, VLIB_MAIN_LOOP_EXIT_PANIC);
+    else {
+        clib_warning("panic: %U", format_clib_error, error);
+        abort();
     }
 }
 
@@ -390,105 +382,97 @@ vlib_panic_with_error (vlib_main_t * vm, clib_error_t * error)
   vlib_panic_with_error (vm, clib_error_return (0, args))
 
 always_inline void
-vlib_panic (vlib_main_t * vm)
-{
-  vlib_panic_with_error (vm, 0);
+vlib_panic(vlib_main_t *vm) {
+    vlib_panic_with_error(vm, 0);
 }
 
 /* Asynchronously requests exit with the given status. */
-void vlib_exit_with_status (vlib_main_t *vm, int status);
+void vlib_exit_with_status(vlib_main_t *vm, int status);
 
 always_inline f64
-vlib_internal_node_vector_rate (vlib_main_t * vm)
-{
-  u64 vectors;
-  u64 calls;
+vlib_internal_node_vector_rate(vlib_main_t *vm) {
+    u64 vectors;
+    u64 calls;
 
-  calls = vm->internal_node_calls - vm->internal_node_calls_last_clear;
+    calls = vm->internal_node_calls - vm->internal_node_calls_last_clear;
 
-  if (PREDICT_FALSE (calls == 0))
-    return 0.0;
+    if (PREDICT_FALSE(calls == 0))
+        return 0.0;
 
-  vectors = vm->internal_node_vectors - vm->internal_node_vectors_last_clear;
+    vectors = vm->internal_node_vectors - vm->internal_node_vectors_last_clear;
 
-  return (f64) vectors / (f64) calls;
+    return (f64) vectors / (f64) calls;
 }
 
 always_inline void
-vlib_clear_internal_node_vector_rate (vlib_main_t * vm)
-{
-  vm->internal_node_calls_last_clear = vm->internal_node_calls;
-  vm->internal_node_vectors_last_clear = vm->internal_node_vectors;
+vlib_clear_internal_node_vector_rate(vlib_main_t *vm) {
+    vm->internal_node_calls_last_clear = vm->internal_node_calls;
+    vm->internal_node_vectors_last_clear = vm->internal_node_vectors;
 }
 
 always_inline void
-vlib_increment_main_loop_counter (vlib_main_t * vm)
-{
-  vm->main_loop_count++;
-  vm->internal_node_last_vectors_per_main_loop = 0;
+vlib_increment_main_loop_counter(vlib_main_t *vm) {
+    vm->main_loop_count++;
+    vm->internal_node_last_vectors_per_main_loop = 0;
 
-  if (PREDICT_FALSE (vm->main_loop_exit_now))
-    clib_longjmp (&vm->main_loop_exit, VLIB_MAIN_LOOP_EXIT_CLI);
+    if (PREDICT_FALSE(vm->main_loop_exit_now))
+        clib_longjmp(&vm->main_loop_exit, VLIB_MAIN_LOOP_EXIT_CLI);
 }
 
 always_inline u32
-vlib_last_vectors_per_main_loop (vlib_main_t * vm)
-{
-  return vm->internal_node_last_vectors_per_main_loop;
+vlib_last_vectors_per_main_loop(vlib_main_t *vm) {
+    return vm->internal_node_last_vectors_per_main_loop;
 }
 
 always_inline void
-vlib_node_runtime_perf_counter (vlib_main_t * vm, vlib_node_runtime_t * node,
-				vlib_frame_t * frame, uword n, u64 t,
-				vlib_node_runtime_perf_call_type_t call_type)
-{
-  vlib_node_runtime_perf_callback_data_t *v =
-    clib_callback_data_check_and_get (&vm->vlib_node_runtime_perf_callbacks);
-  if (vec_len (v))
-    {
-      vlib_node_runtime_perf_callback_args_t args = {
-	.vm = vm,
-	.node = node,
-	.frame = frame,
-	.packets = n,
-	.cpu_time_now = t,
-	.call_type = call_type,
-      };
-      clib_callback_data_call_vec (v, &args);
+vlib_node_runtime_perf_counter(vlib_main_t *vm, vlib_node_runtime_t *node,
+                               vlib_frame_t *frame, uword n, u64 t,
+                               vlib_node_runtime_perf_call_type_t call_type) {
+    vlib_node_runtime_perf_callback_data_t *v =
+            clib_callback_data_check_and_get(&vm->vlib_node_runtime_perf_callbacks);
+    if (vec_len(v)) {
+        vlib_node_runtime_perf_callback_args_t args = {
+            .vm = vm,
+            .node = node,
+            .frame = frame,
+            .packets = n,
+            .cpu_time_now = t,
+            .call_type = call_type,
+        };
+        clib_callback_data_call_vec(v, &args);
     }
 }
 
 always_inline void vlib_set_queue_signal_callback
-  (vlib_main_t * vm, void (*fp) (vlib_main_t *))
-{
-  vm->queue_signal_callback = fp;
+(vlib_main_t *vm, void (*fp)(vlib_main_t *)) {
+    vm->queue_signal_callback = fp;
 }
 
 always_inline void
-vlib_main_init ()
-{
-  vlib_global_main_t *vgm = &vlib_global_main;
-  vlib_main_t *vm;
+vlib_main_init() {
+    vlib_global_main_t *vgm = &vlib_global_main;
+    vlib_main_t *vm;
 
-  vgm->init_functions_called = hash_create (0, /* value bytes */ 0);
+    vgm->init_functions_called = hash_create(0, /* value bytes */ 0);
 
-  vm = clib_mem_alloc_aligned (sizeof (*vm), CLIB_CACHE_LINE_BYTES);
-  vec_add1_ha (vgm->vlib_mains, vm, 0, CLIB_CACHE_LINE_BYTES);
+    vm = clib_mem_alloc_aligned(sizeof (*vm), CLIB_CACHE_LINE_BYTES);
+    vec_add1_ha(vgm->vlib_mains, vm, 0, CLIB_CACHE_LINE_BYTES);
 }
 
 /* Main routine. */
-int vlib_main (vlib_main_t * vm, unformat_input_t * input);
+int vlib_main(vlib_main_t *vm, unformat_input_t *input);
 
 /* Thread stacks, for os_get_thread_index */
 extern u8 **vlib_thread_stacks;
 
 /* Number of thread stacks that the application needs */
-u32 vlib_app_num_thread_stacks_needed (void) __attribute__ ((weak));
+u32 vlib_app_num_thread_stacks_needed(void) __attribute__ ((weak));
 
-void vlib_add_del_post_mortem_callback (void *cb, int is_add);
+void vlib_add_del_post_mortem_callback(void *cb, int is_add);
 
-vlib_main_t *vlib_get_main_not_inline (void);
-elog_main_t *vlib_get_elog_main_not_inline ();
+vlib_main_t *vlib_get_main_not_inline(void);
+
+elog_main_t *vlib_get_elog_main_not_inline();
 
 #endif /* included_vlib_main_h */
 
